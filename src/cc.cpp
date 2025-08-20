@@ -230,6 +230,8 @@ void CustomController::computeSlow()
         // ==================== QP ====================
         Eigen::VectorXd gain_diag = Eigen::VectorXd::Zero(6);
         gain_diag << 5, 5, 5, 5, 5, 5;
+        Eigen::VectorXd head_gain_diag = Eigen::VectorXd::Zero(6);
+        head_gain_diag << 1, 1, 1, 1, 1, 1;
         // set QP problem
         Eigen::VectorXd lhand_error = Eigen::VectorXd::Zero(6);
         lhand_error.head(3) = rd_.link_[Left_Hand].x_desired - rd_.link_[Left_Hand].xpos;
@@ -247,7 +249,7 @@ void CustomController::computeSlow()
         Jacobian.block(6, 0, 6, 21) = rd_.link_[Head].Jac().block(0, 18, 6, 21);
         Jacobian.block(12, 0, 6, 21) = rd_.link_[Right_Hand].Jac().block(0, 18, 6, 21);
         qp_cartesian_velocity_->setCurrentState(rd_.q_.tail(21), rd_.q_dot_desired.tail(21), Jacobian);
-        qp_cartesian_velocity_->setDesiredEEVel(gain_diag.asDiagonal()*lhand_error, gain_diag.asDiagonal()*head_error, gain_diag.asDiagonal()*rhand_error);
+        qp_cartesian_velocity_->setDesiredEEVel(gain_diag.asDiagonal()*lhand_error, head_gain_diag.asDiagonal()*head_error, gain_diag.asDiagonal()*rhand_error);
 
         // solve QP
         Eigen::Matrix<double, 21, 1> opt_qdot;
