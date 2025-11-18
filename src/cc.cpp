@@ -26,7 +26,10 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     desired_robot_pose_msg_.poses.resize(3);
     robot_joint_pub_ = nh_cc_.advertise<sensor_msgs::JointState>("/tocabi/robot_joints", 1);
     desired_joint_pub_ = nh_cc_.advertise<sensor_msgs::JointState>("/tocabi/desired_joints", 1);
-    camera_image_sub = it.subscribe("/mujoco_ros_interface/camera/image", 1, &CustomController::camera_img_callback, this);
+    // camera_image_sub = it.subscribe("/mujoco_ros_interface/camera/image", 1, &CustomController::camera_img_callback, this);
+    camera_image_sub_L = it.subscribe("/mujoco_ros_interface/cam_L/image", 1, &CustomController::camera_img_callback, this);
+    camera_image_sub_R = it.subscribe("/mujoco_ros_interface/cam_R/image", 1, &CustomController::camera_img_callback, this);
+
     new_obj_pose_pub = nh_cc_.advertise<geometry_msgs::Pose>("/new_obj_pose", 1);
     terminate_pub = nh_cc_.advertise<std_msgs::Bool>("/tocabi/act/terminate", 1);
     terminate_sub = nh_cc_.subscribe("/tocabi/act/terminate", 1, &CustomController::TerminateCallback, this);
@@ -109,6 +112,9 @@ bool CustomController::saveImage(const sensor_msgs::ImageConstPtr &image_msg) {
 
 void CustomController::camera_img_callback(const sensor_msgs::ImageConstPtr &msg)
 {
+    if(!data_collect_start_) return;
+
+    const std::string& cam_id = msg->header.frame_id;
     if(data_collect_start_){
         try
         {
@@ -184,7 +190,7 @@ void CustomController::computeSlow()
         }
         // move to ready pose
         double duration = 2.0;
-        resetRobotPose(duration);
+        // resetRobotPose(duration);
 
         if (rd_.control_time_ > time_init_ + duration)
         {
@@ -210,9 +216,9 @@ void CustomController::computeSlow()
                 fout3.close();
             }
 
-            // open hand
-            hand_open_msg.data = 0;
-            hand_open_pub.publish(hand_open_msg);
+            // // open hand
+            // hand_open_msg.data = 0;
+            // hand_open_pub.publish(hand_open_msg);
 
             if ((prev_mode == 7 && num_success < num_data) || (prev_mode > 7 && num_trials < num_test)){
             // relocate object to new position
@@ -221,16 +227,16 @@ void CustomController::computeSlow()
             const double minY = -0.05;  // -0.1;
             const double maxY = 0.05;   // 0.1;
 
-            new_obj_pose_msg_.position.x = getRandomPosition(minX, maxX);
-            new_obj_pose_msg_.position.y = getRandomPosition(minY, maxY);
-            new_obj_pose_msg_.position.z = 0.0;
-            double yaw = getRandomPosition(0, 0.75);
-            Eigen::Quaterniond quaternion(DyrosMath::rotateWithZ(yaw));
-            new_obj_pose_msg_.orientation.x = quaternion.coeffs()[0];
-            new_obj_pose_msg_.orientation.y = quaternion.coeffs()[1];
-            new_obj_pose_msg_.orientation.z = quaternion.coeffs()[2];
-            new_obj_pose_msg_.orientation.w = quaternion.coeffs()[3];
-            new_obj_pose_pub.publish(new_obj_pose_msg_);
+            // new_obj_pose_msg_.position.x = getRandomPosition(minX, maxX);
+            // new_obj_pose_msg_.position.y = getRandomPosition(minY, maxY);
+            // new_obj_pose_msg_.position.z = 0.0;
+            // double yaw = getRandomPosition(0, 0.75);
+            // Eigen::Quaterniond quaternion(DyrosMath::rotateWithZ(yaw));
+            // new_obj_pose_msg_.orientation.x = quaternion.coeffs()[0];
+            // new_obj_pose_msg_.orientation.y = quaternion.coeffs()[1];
+            // new_obj_pose_msg_.orientation.z = quaternion.coeffs()[2];
+            // new_obj_pose_msg_.orientation.w = quaternion.coeffs()[3];
+            // new_obj_pose_pub.publish(new_obj_pose_msg_);
             }
 
             rd_.tc_.mode = prev_mode;
@@ -257,7 +263,7 @@ void CustomController::computeSlow()
             auto now = std::chrono::system_clock::now();
             std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
             // folderPathSS << "/home/hokyun20/2024winter_ws/src/camera_pubsub/" << ros::Time::now().sec;
-            folderPathSS << "/home/lyh/tocabi_ws/src/data/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
+            folderPathSS << "/home/smtamh/catkin_ws/src/tocabi/data/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
             folderPath = folderPathSS.str();
             
             folderPathSS << "/image";
@@ -339,9 +345,9 @@ void CustomController::computeSlow()
                 rd_.tc_.mode = 6;
                 rd_.tc_init = true;
 
-                // close hand to grab the object
-                hand_open_msg.data = 1;
-                hand_open_pub.publish(hand_open_msg);
+                // // close hand to grab the object
+                // hand_open_msg.data = 1;
+                // hand_open_pub.publish(hand_open_msg);
             }
         }
         // torque PD control
@@ -369,7 +375,7 @@ void CustomController::computeSlow()
             auto now = std::chrono::system_clock::now();
             std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
             // folderPathSS << "/home/hokyun20/2024winter_ws/src/camera_pubsub/" << ros::Time::now().sec;
-            folderPathSS << "/home/lyh/tocabi_ws/src/result/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
+            folderPathSS << "/home/smtamh/catkin_ws/src/tocabi/result/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
             folderPath = folderPathSS.str();
             
             folderPathSS << "/image";
@@ -487,7 +493,7 @@ void CustomController::computeSlow()
             auto now = std::chrono::system_clock::now();
             std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
             // folderPathSS << "/home/hokyun20/2024winter_ws/src/camera_pubsub/" << ros::Time::now().sec;
-            folderPathSS << "/home/lyh/tocabi_ws/src/result/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
+            folderPathSS << "/home/smtamh/catkin_ws/src/tocabi/result/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
             folderPath = folderPathSS.str();
             
             folderPathSS << "/image";

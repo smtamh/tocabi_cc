@@ -114,7 +114,9 @@ public:
     ros::Publisher camera_flag_pub;
     std_msgs::Bool camera_flag_msg;
 
-    image_transport::Subscriber camera_image_sub;
+    // image_transport::Subscriber camera_image_sub;
+    image_transport::Subscriber camera_image_sub_L;
+    image_transport::Subscriber camera_image_sub_R;
 
     int camera_tick_ = 0;
     bool data_collect_start_ = false;
