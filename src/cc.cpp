@@ -37,6 +37,8 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     hand_open_sub = nh_cc_.subscribe("/mujoco_ros_interface/hand_open", 1, &CustomController::HandMsgCallback, this);
     hand_open_msg.data = 0;
 
+    rrt_end_pub = nh_cc_.advertise<std_msgs::Bool>("/tocabi/srmt/end_rrt", 1);
+
     nh_cc_.getParam("tocabi_cc/IL/num_data", num_data);
     nh_cc_.getParam("tocabi_cc/IL/num_test", num_test);
 
@@ -191,6 +193,8 @@ void CustomController::computeSlow()
         // move to ready pose
         double duration = 2.0;
         // resetRobotPose(duration);
+        rd_.torque_desired =  kp * (desired_q_ - rd_.q_) + kv * (Eigen::VectorXd::Zero(rd_.q_dot_.size()) - rd_.q_dot_);
+
 
         if (rd_.control_time_ > time_init_ + duration)
         {
@@ -342,6 +346,11 @@ void CustomController::computeSlow()
                     desired_q_[JOINT_INDEX[joint_names_[i]]] = points[traj_index].positions[i];
                     desired_qdot_[JOINT_INDEX[joint_names_[i]]] = points[traj_index].velocities[i];
                 }
+
+                std_msgs::Bool msg;
+                msg.data = true;
+                rrt_end_pub.publish(msg);
+
                 rd_.tc_.mode = 6;
                 rd_.tc_init = true;
 
