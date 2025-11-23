@@ -38,6 +38,9 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     hand_open_msg.data = 0;
 
     rrt_end_pub = nh_cc_.advertise<std_msgs::Bool>("/tocabi/srmt/end_rrt", 1);
+    openhand_state_pub = nh_cc_.advertise<std_msgs::Int32>("/tocabi/openhand_state", 1);
+    openhand_state_sub = nh_cc_.subscribe("/tocabi/openhand_state", 1, &CustomController::OpenhandStateCallback, this);
+    openhand_state_msg.data = 0;
 
     nh_cc_.getParam("tocabi_cc/IL/num_data", num_data);
     nh_cc_.getParam("tocabi_cc/IL/num_test", num_test);
@@ -819,6 +822,11 @@ void CustomController::TerminateCallback(const std_msgs::BoolPtr &msg)
 void CustomController::HandMsgCallback(const std_msgs::Int32Ptr &msg)
 {
     hand_open_msg.data = msg->data;
+}
+
+void CustomController::OpenhandStateCallback(const std_msgs::Int32Ptr &msg)
+{
+    openhand_state_msg.data = msg->data;
 }
 
 Eigen::Matrix3d CustomController::Quat2rotmatrix(double q0, double q1, double q2, double q3)

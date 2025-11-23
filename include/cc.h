@@ -47,6 +47,7 @@ public:
     void RHandPoseTargetCallback(const geometry_msgs::PoseStampedPtr &msg);
     void TerminateCallback(const std_msgs::BoolPtr &msg);
     void HandMsgCallback(const std_msgs::Int32Ptr &msg);
+    void OpenhandStateCallback(const std_msgs::Int32Ptr &msg);
     Eigen::Matrix3d Quat2rotmatrix(double q0, double q1, double q2, double q3);
     float PositionMapping( float haptic_pos, int i);
     bool saveImage(const sensor_msgs::ImageConstPtr &image_msg);
@@ -66,6 +67,7 @@ public:
     ros::Subscriber obj_pose_sub;
     ros::Publisher new_obj_pose_pub;
     ros::Publisher rrt_end_pub;
+    ros::Publisher openhand_state_pub;
 
     Eigen::Vector3d obj_pos_;
     Eigen::VectorQd desired_q_;
@@ -88,9 +90,13 @@ public:
     ros::Subscriber terminate_sub;
     std_msgs::Bool terminate_msg;
     ros::Publisher hand_open_pub;
+
     ros::Subscriber hand_open_sub;
     std_msgs::Int32 hand_open_msg;
     geometry_msgs::Pose new_obj_pose_msg_;
+
+    ros::Subscriber openhand_state_sub;
+    std_msgs::Int32 openhand_state_msg;
 
     void publishRobotPoses();
     ros::Publisher robot_pose_pub;
