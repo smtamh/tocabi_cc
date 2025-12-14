@@ -257,7 +257,7 @@ void CustomController::computeSlow()
             auto now = std::chrono::system_clock::now();
             std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
             // folderPathSS << "/home/hokyun20/2024winter_ws/src/camera_pubsub/" << ros::Time::now().sec;
-            folderPathSS << "/home/lyh/tocabi_ws/src/data/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
+            folderPathSS << "/home/smtamh/catkin_ws/src/data/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
             folderPath = folderPathSS.str();
             
             folderPathSS << "/image";
@@ -369,7 +369,7 @@ void CustomController::computeSlow()
             auto now = std::chrono::system_clock::now();
             std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
             // folderPathSS << "/home/hokyun20/2024winter_ws/src/camera_pubsub/" << ros::Time::now().sec;
-            folderPathSS << "/home/lyh/tocabi_ws/src/result/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
+            folderPathSS << "/home/smtamh/catkin_ws/src/result/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
             folderPath = folderPathSS.str();
             
             folderPathSS << "/image";
@@ -487,7 +487,7 @@ void CustomController::computeSlow()
             auto now = std::chrono::system_clock::now();
             std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
             // folderPathSS << "/home/hokyun20/2024winter_ws/src/camera_pubsub/" << ros::Time::now().sec;
-            folderPathSS << "/home/lyh/tocabi_ws/src/result/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
+            folderPathSS << "/home/smtamh/catkin_ws/src/result/" << std::put_time(std::localtime(&currentTime), "%Y%m%d-%H%M%S");
             folderPath = folderPathSS.str();
             
             folderPathSS << "/image";
