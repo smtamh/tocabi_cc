@@ -65,6 +65,7 @@ public:
     ros::Subscriber rhand_pose_target_sub;
     ros::Subscriber obj_pose_sub;
     ros::Publisher new_obj_pose_pub;
+    ros::Publisher rrt_end_pub;
 
     Eigen::Vector3d obj_pos_;
     Eigen::VectorQd desired_q_;

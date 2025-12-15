@@ -33,6 +33,7 @@ CustomController::CustomController(RobotData &rd) : rd_(rd) //, wbc_(dc.wbc_)
     hand_open_pub = nh_cc_.advertise<std_msgs::Int32>("/mujoco_ros_interface/hand_open", 1);
     hand_open_sub = nh_cc_.subscribe("/mujoco_ros_interface/hand_open", 1, &CustomController::HandMsgCallback, this);
     hand_open_msg.data = 0;
+    rrt_end_pub = nh_cc_.advertise<std_msgs::Bool>("/tocabi/srmt/end_rrt", 1);
 
     nh_cc_.getParam("tocabi_cc/IL/num_data", num_data);
     nh_cc_.getParam("tocabi_cc/IL/num_test", num_test);
@@ -180,21 +181,13 @@ void CustomController::computeSlow()
             rd_.tc_init = false;
             q_init_ = rd_.q_;
             time_init_ = rd_.control_time_ + 0.5;   // wait 0.5s for hand closed
-            if (prev_mode > 7) is_reached = (obj_pos_(2) > 1.0);
         }
-        // move to ready pose
+        // do not reset for continuous action: just wait for duration
         double duration = 2.0;
-        resetRobotPose(duration);
+        // resetRobotPose(duration);
 
         if (rd_.control_time_ > time_init_ + duration)
         {
-            // check and record whether the task has succeeded
-            if (prev_mode == 7) is_reached = (obj_pos_(2) > 1.0);
-            fout3 << is_reached << endl;
-            std::cout<< (is_reached ? "Success" : "Fail") << std::endl;
-            if (is_reached) num_success++;
-            num_trials++;
-
             // end data collection
             data_collect_start_ = false;
             if(fout1.is_open()==true)
@@ -208,29 +201,6 @@ void CustomController::computeSlow()
             if(fout3.is_open()==true)
             {
                 fout3.close();
-            }
-
-            // open hand
-            hand_open_msg.data = 0;
-            hand_open_pub.publish(hand_open_msg);
-
-            if ((prev_mode == 7 && num_success < num_data) || (prev_mode > 7 && num_trials < num_test)){
-            // relocate object to new position
-            const double minX = -0.05;  // -0.1;
-            const double maxX = 0.05;   // 0.1;
-            const double minY = -0.05;  // -0.1;
-            const double maxY = 0.05;   // 0.1;
-
-            new_obj_pose_msg_.position.x = getRandomPosition(minX, maxX);
-            new_obj_pose_msg_.position.y = getRandomPosition(minY, maxY);
-            new_obj_pose_msg_.position.z = 0.0;
-            double yaw = getRandomPosition(0, 0.75);
-            Eigen::Quaterniond quaternion(DyrosMath::rotateWithZ(yaw));
-            new_obj_pose_msg_.orientation.x = quaternion.coeffs()[0];
-            new_obj_pose_msg_.orientation.y = quaternion.coeffs()[1];
-            new_obj_pose_msg_.orientation.z = quaternion.coeffs()[2];
-            new_obj_pose_msg_.orientation.w = quaternion.coeffs()[3];
-            new_obj_pose_pub.publish(new_obj_pose_msg_);
             }
 
             rd_.tc_.mode = prev_mode;
@@ -336,12 +306,13 @@ void CustomController::computeSlow()
                     desired_q_[JOINT_INDEX[joint_names_[i]]] = points[traj_index].positions[i];
                     desired_qdot_[JOINT_INDEX[joint_names_[i]]] = points[traj_index].velocities[i];
                 }
+
+                std_msgs::Bool msg;
+                msg.data = true;
+                rrt_end_pub.publish(msg);
+
                 rd_.tc_.mode = 6;
                 rd_.tc_init = true;
-
-                // close hand to grab the object
-                hand_open_msg.data = 1;
-                hand_open_pub.publish(hand_open_msg);
             }
         }
         // torque PD control
@@ -594,7 +565,7 @@ void CustomController::computeSlow()
 
         double elapsed_time = cc_timer_.elapsedAndReset();
         // cout << elapsed_time * 1000 << " ms" << endl;
-    } 
+    }
 }
 
 void CustomController::resetRobotPose(double duration)
